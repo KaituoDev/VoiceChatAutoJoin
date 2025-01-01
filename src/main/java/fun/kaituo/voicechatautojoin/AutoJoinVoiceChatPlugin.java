@@ -4,7 +4,7 @@ import de.maxhenkel.voicechat.api.Group;
 import de.maxhenkel.voicechat.api.VoicechatPlugin;
 import de.maxhenkel.voicechat.api.events.EventRegistration;
 import de.maxhenkel.voicechat.api.events.PlayerConnectedEvent;
-import de.maxhenkel.voicechat.api.events.ServerEvent;
+import de.maxhenkel.voicechat.api.events.VoicechatServerStartedEvent;
 import org.bukkit.entity.Player;
 
 import java.util.UUID;
@@ -12,7 +12,8 @@ import java.util.UUID;
 public class AutoJoinVoiceChatPlugin implements VoicechatPlugin {
     private final VoiceChatAutoJoin plugin;
 
-    private static final UUID uuid = UUID.randomUUID();
+    public static final UUID defaultGroupUuid = UUID.randomUUID();
+    public static final UUID spectatorGroupUuid = UUID.randomUUID();
 
     public AutoJoinVoiceChatPlugin(VoiceChatAutoJoin plugin) {
         this.plugin = plugin;
@@ -23,33 +24,33 @@ public class AutoJoinVoiceChatPlugin implements VoicechatPlugin {
         return VoiceChatAutoJoin.PLUGIN_ID;
     }
 
-    private boolean doesGroupExist(ServerEvent e) {
-        for (Group g : e.getVoicechat().getGroups()) {
-            if (g.getId().equals(uuid)) {
-                return true;
-            }
-        }
-        return false;
-    }
-
-    private void createGroupIfNotExists(ServerEvent e) {
-        if (!doesGroupExist(e)) {
-            plugin.getLogger().info("Does not exist, creating group");
-            e.getVoicechat().groupBuilder()
-                    .setId(uuid)
-                    .setName(plugin.getConfig().getString("group-name"))
-                    .setPersistent(true)
-                    .setType(Group.Type.OPEN)
-                    .build();
-        }
+    public void onServerStarted(VoicechatServerStartedEvent e) {
+        plugin.setApi(e.getVoicechat());
+        e.getVoicechat().groupBuilder()
+                .setId(defaultGroupUuid)
+                .setName("Default")
+                .setPersistent(true)
+                .setType(Group.Type.ISOLATED)
+                .build();
+        e.getVoicechat().groupBuilder()
+                .setId(spectatorGroupUuid)
+                .setName("Spectator")
+                .setPersistent(true)
+                .setType(Group.Type.ISOLATED)
+                .build();
     }
 
     public void onPlayerConnected(PlayerConnectedEvent e) {
-        createGroupIfNotExists(e);
-        e.getConnection().setGroup(e.getVoicechat().getGroup(uuid));
         Player p = (Player) e.getConnection().getPlayer().getPlayer();
-        String msg = "§f已将你自动加入全服语音聊天频道！";
-        p.sendMessage(msg);
+        if (p.getGameMode().equals(org.bukkit.GameMode.SPECTATOR)) {
+            e.getConnection().setGroup(e.getVoicechat().getGroup(spectatorGroupUuid));
+            String msg = "§f已将你自动加入观察者语音聊天频道！";
+            p.sendMessage(msg);
+        } else {
+            e.getConnection().setGroup(e.getVoicechat().getGroup(defaultGroupUuid));
+            String msg = "§f已将你自动加入默认语音聊天频道！";
+            p.sendMessage(msg);
+        }
     }
 
 
@@ -57,6 +58,7 @@ public class AutoJoinVoiceChatPlugin implements VoicechatPlugin {
     @Override
     public void registerEvents(EventRegistration registration) {
         registration.registerEvent(PlayerConnectedEvent.class, this::onPlayerConnected);
+        registration.registerEvent(VoicechatServerStartedEvent.class, this::onServerStarted);
     }
 
 
