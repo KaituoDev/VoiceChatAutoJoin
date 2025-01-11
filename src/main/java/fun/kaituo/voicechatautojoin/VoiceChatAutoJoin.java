@@ -7,6 +7,7 @@ import org.bukkit.Bukkit;
 import org.bukkit.GameMode;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
+import org.bukkit.event.player.PlayerDropItemEvent;
 import org.bukkit.event.player.PlayerGameModeChangeEvent;
 import org.bukkit.plugin.java.JavaPlugin;
 
@@ -34,6 +35,12 @@ public class VoiceChatAutoJoin extends JavaPlugin implements Listener {
             connection.setGroup(api.getGroup(AutoJoinVoiceChatPlugin.defaultGroupUuid));
             e.getPlayer().sendMessage("§f已将你自动加入默认语音聊天频道！");
         }
+    }
+
+    @SuppressWarnings("unused")
+    @EventHandler
+    public void onPlayerDropItem(PlayerDropItemEvent e) {
+        e.setCancelled(true);
     }
 
     @Override
