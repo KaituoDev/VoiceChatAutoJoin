@@ -13,12 +13,14 @@ import org.bukkit.plugin.java.JavaPlugin;
 
 public class VoiceChatAutoJoin extends JavaPlugin implements Listener {
 
-    public static final String PLUGIN_ID = "voicechatautojoin";
-
     private VoicechatServerApi api;
 
     public void setApi(VoicechatServerApi api) {
         this.api = api;
+    }
+
+    public VoicechatServerApi getApi() {
+        return api;
     }
 
     @SuppressWarnings("unused")
@@ -29,11 +31,11 @@ public class VoiceChatAutoJoin extends JavaPlugin implements Listener {
             return;
         }
         if (e.getNewGameMode().equals(GameMode.SPECTATOR)) {
-            connection.setGroup(api.getGroup(AutoJoinVoiceChatPlugin.spectatorGroupUuid));
-            e.getPlayer().sendMessage("§f已将你自动加入观察者语音聊天频道！");
+            connection.setGroup(api.getGroup(AutoJoinVoiceChatPlugin.SPECTATOR_GROUP_UUID));
+            e.getPlayer().sendMessage(AutoJoinVoiceChatPlugin.SPECTATOR_JOIN_MESSAGE);
         } else {
-            connection.setGroup(api.getGroup(AutoJoinVoiceChatPlugin.defaultGroupUuid));
-            e.getPlayer().sendMessage("§f已将你自动加入默认语音聊天频道！");
+            connection.setGroup(api.getGroup(AutoJoinVoiceChatPlugin.DEFAULT_GROUP_UUID));
+            e.getPlayer().sendMessage(AutoJoinVoiceChatPlugin.DEFAULT_JOIN_MESSAGE);
         }
     }
 
@@ -55,6 +57,7 @@ public class VoiceChatAutoJoin extends JavaPlugin implements Listener {
             getLogger().warning("VoiceChatAutoJoin failed to get bukkit voice chat service!");
         }
         Bukkit.getPluginManager().registerEvents(this, this);
+        getCommand("switchchat").setExecutor(new AutoJoinCommandExecutor(this));
     }
 
     @Override
