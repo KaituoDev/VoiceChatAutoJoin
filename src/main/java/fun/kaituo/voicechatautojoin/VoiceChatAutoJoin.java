@@ -47,7 +47,6 @@ public class VoiceChatAutoJoin extends JavaPlugin implements Listener {
 
     @Override
     public void onEnable() {
-        saveDefaultConfig();
         BukkitVoicechatService service = getServer().getServicesManager().load(BukkitVoicechatService.class);
         if (service != null) {
             AutoJoinVoiceChatPlugin voiceChatPlugin = new AutoJoinVoiceChatPlugin(this);
